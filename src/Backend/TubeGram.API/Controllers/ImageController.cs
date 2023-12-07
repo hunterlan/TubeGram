@@ -8,58 +8,51 @@ namespace TubeGram.API.Controllers
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class ImageController : ControllerBase
+    public class ImageController(ApplicationContext context, IConfiguration config) : ControllerBase
     {
-        private readonly ApplicationContext _context;
-        private readonly IConfiguration _config;
-
-        public ImageController(ApplicationContext context, IConfiguration config)
-        {
-            _context = context;
-            _config = config;
-        }
-        
         [HttpPost]
-        public async Task<IActionResult> CreateImage([FromForm] CreateImageDto newImageDto)
+        public async Task<IActionResult> PostImage([FromForm] CreateImageDto newImageDto)
         {
+            //TODO: Write allowed file extensions
+            //TODO: Write anti-virus service
             //Checking if the user uploaded the image correctly
-            if (newImageDto.file.Length == 0)
+            if (newImageDto.File.Length == 0)
             {
                 return Content("File not selected");
             }
 
-            var path = Path.Combine(_config["FileStorage:Images"]!, newImageDto.file.FileName);
+            var path = Path.Combine(config["FileStorage:Images"]!, newImageDto.File.FileName);
             
             //Saving the image in that folder 
             await using var stream = new FileStream(path, FileMode.Create);
-            await newImageDto.file.CopyToAsync(stream);
+            await newImageDto.File.CopyToAsync(stream);
             stream.Close();
 
             var newImage = new Image
             {
                 UserId = newImageDto.UserId,
-                Filename = newImageDto.file.FileName,
+                Filename = newImageDto.File.FileName,
                 CreationDate = DateTime.Now,
-                Description = newImageDto.description
+                Description = newImageDto.Description
             };
 
-            await _context.Images.AddAsync(newImage);
-            await _context.SaveChangesAsync();
+            await context.Images.AddAsync(newImage);
+            await context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(CreateImage), new {Id = newImage.Id});
+            return CreatedAtAction(nameof(PostImage), new {Id = newImage.Id});
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetImage(long id)
         {
-            var image = await _context.Images.FindAsync(id);
+            var image = await context.Images.FindAsync(id);
 
             if (image is null)
             {
                 return NotFound();
             }
             
-            var path = Path.Combine(_config["FileStorage:Images"]!, image.Filename);
+            var path = Path.Combine(config["FileStorage:Images"]!, image.Filename);
             var ext = Path.GetExtension(image.Filename).ToLowerInvariant();
 
             var b = await System.IO.File.ReadAllBytesAsync(path);   // You can use your own method over here.         
@@ -69,22 +62,22 @@ namespace TubeGram.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteImage(long id)
         {
-            var image = await _context.Images.FindAsync(id);
+            var image = await context.Images.FindAsync(id);
 
             if (image is null)
             {
                 return NotFound();
             }
             
-            var path = Path.Combine(_config["FileStorage:Images"]!, image.Filename);
+            var path = Path.Combine(config["FileStorage:Images"]!, image.Filename);
             System.IO.File.Delete(path);
 
-            _context.Images.Remove(image);
-            await _context.SaveChangesAsync();
+            context.Images.Remove(image);
+            await context.SaveChangesAsync();
 
             return Ok();
         }
     }
 
-    public record CreateImageDto(int UserId, IFormFile file, string? description);
+    public record CreateImageDto(int UserId, IFormFile File, string? Description);
 }
