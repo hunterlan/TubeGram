@@ -39,7 +39,8 @@ namespace TubeGram.API.Controllers
             {
                 UserId = newImageDto.UserId,
                 Filename = newImageDto.file.FileName,
-                CreationDate = DateTime.Now
+                CreationDate = DateTime.Now,
+                Description = newImageDto.description
             };
 
             await _context.Images.AddAsync(newImage);
@@ -85,5 +86,5 @@ namespace TubeGram.API.Controllers
         }
     }
 
-    public record CreateImageDto(int UserId, IFormFile file);
+    public record CreateImageDto(int UserId, IFormFile file, string? description);
 }
