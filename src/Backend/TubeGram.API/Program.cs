@@ -14,12 +14,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ApplicationContext>(opt => opt.UseSqlServer(config.GetSection("ConnectionString").Value));
-builder.Services.AddAuthentication(a =>
-{
-    a.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    a.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    a.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer("jwt", o =>
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {
     o.TokenValidationParameters = new TokenValidationParameters
     {
@@ -32,8 +27,16 @@ builder.Services.AddAuthentication(a =>
         ValidateIssuerSigningKey = true
     };
 });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+    // use context
+    dbContext.Database.EnsureCreated();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -44,6 +47,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -16,4 +16,8 @@ public class User
     public string Password { get; set; } = null!;
 
     public string Email { get; set; } = null!;
+    
+    public ICollection<Image> Images { get; set; }
+    public ICollection<Video> Videos { get; set; }
+    public PictureProfile PictureProfile { get; set; }
 }

@@ -17,7 +17,6 @@ namespace TubeGram.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly ApplicationContext _context;
-
         private readonly IConfiguration _config;
         public UserController(ApplicationContext context, IConfiguration config)
         {
@@ -25,12 +24,11 @@ namespace TubeGram.API.Controllers
             _config = config;
         }
 
-        [HttpPost]
-
-        public async Task<IActionResult> CreateUser([FromBody] UserRequest userRequest)
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateUser([FromBody] UserDTO userDto)
         {
-            var newUser = new User(userRequest.username, EncryptPassword(userRequest.password, "salt"),
-                userRequest.email);
+            var newUser = new User(userDto.username, EncryptPassword(userDto.password, "salt"),
+                userDto.email);
             try
             {
                 await _context.Users.AddAsync(newUser);
@@ -45,14 +43,13 @@ namespace TubeGram.API.Controllers
         }
 
         [HttpPost]
-
-        public async Task<IActionResult> LoginUser([FromBody] string username, [FromBody] string password)
+        public async Task<IActionResult> LoginUser([FromBody] CreateUserDTO newUser)
         {
             User? user;
             try
             {
                 user = await _context.Users.FirstOrDefaultAsync(u =>
-                    u.Username == username && u.Password == EncryptPassword(password, "salt"));
+                    u.Username == newUser.username && u.Password == EncryptPassword(newUser.password, "salt"));
                 if (user is null)
                 {
                     return StatusCode(401);
@@ -64,7 +61,7 @@ namespace TubeGram.API.Controllers
             }
 
             var key = Encoding.ASCII.GetBytes(_config["Jwt:Key"]!);
-            var handler = new JsonWebTokenHandler();
+            JsonWebTokenHandler handler = new JsonWebTokenHandler();
 
             var claims = new List<Claim>
             {
@@ -73,7 +70,7 @@ namespace TubeGram.API.Controllers
                 new(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
 
-            var token = handler.CreateToken(new SecurityTokenDescriptor()
+            var token = handler.CreateToken(new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(int.Parse(_config["Jwt:TokenLifetime"]!)),
@@ -82,7 +79,7 @@ namespace TubeGram.API.Controllers
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             });
 
-            return StatusCode(200, token);
+            return StatusCode(200, new ResponseUserDto(user.Id, token));
         }
 
         //TODO: Rewrite to Argon2/BCrypt
@@ -96,5 +93,9 @@ namespace TubeGram.API.Controllers
         }
     }
 
-    public record UserRequest(string username, string password, string email);
+    public record UserDTO(string username, string password, string email);
+
+    public record CreateUserDTO(string username, string password);
+
+    public record ResponseUserDto(int id, string token);
 }
