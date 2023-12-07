@@ -16,6 +16,8 @@ namespace TubeGram.API.Controllers
         {
             return new string[] { "value1", "value2" };
         }*/
+        
+        private readonly string[] _permittedExtensions = { ".mp4", ".webm" };
 
         // GET api/<VideoController>/5
         [HttpGet("{id}")]
@@ -40,7 +42,11 @@ namespace TubeGram.API.Controllers
         [RequestSizeLimit(1024*1024*1024)]
         public async Task<IActionResult> PostVideo([FromForm] PostVideoDto newVideoDto)
         {
-            //TODO: Write allowed file extensions
+            var ext = Path.GetExtension(newVideoDto.Video.FileName);
+            if (!_permittedExtensions.Contains(ext))
+            {
+                return StatusCode(StatusCodes.Status415UnsupportedMediaType, "Only .mp4 and .webm videos supported.");
+            }
             //TODO: Write anti-virus service
             if (newVideoDto.Video.Length == 0)
             {

@@ -10,10 +10,15 @@ namespace TubeGram.API.Controllers
     [ApiController]
     public class ImageController(ApplicationContext context, IConfiguration config) : ControllerBase
     {
+        private readonly string[] _permittedExtensions = { ".jpg", ".jpeg", ".png" };
         [HttpPost]
         public async Task<IActionResult> PostImage([FromForm] CreateImageDto newImageDto)
         {
-            //TODO: Write allowed file extensions
+            var ext = Path.GetExtension(newImageDto.File.FileName);
+            if (!_permittedExtensions.Contains(ext))
+            {
+                return StatusCode(StatusCodes.Status415UnsupportedMediaType, "Only .jpg, .jpeg and .png images supported.");
+            }
             //TODO: Write anti-virus service
             //Checking if the user uploaded the image correctly
             if (newImageDto.File.Length == 0)
