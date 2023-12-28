@@ -30,13 +30,6 @@ namespace TubeGram.API.Controllers
             return File(b, "video/" + ext);
         }
 
-        [HttpGet]
-        public Task<IActionResult> GetVideos([FromQuery] int count)
-        {
-            var videos = context.Videos.OrderBy(i => i.CreationDate).Take(count);
-            return Task.FromResult<IActionResult>(Ok(videos));
-        }
-
         // POST api/<VideoController>
         [HttpPost]
         [RequestSizeLimit(1024*1024*1024)]

@@ -1,4 +1,4 @@
-export async function fetchRequest<Type>(url: string, jsonBody: string, method: string, contentType: string,
+export async function fetchRequest<Type>(url: string, jsonBody: string | undefined, method: string, contentType: string,
                                          token: string | undefined): Promise<Type|undefined> {
     const headerRequest = new Headers();
     headerRequest.set('Content-Type', method);

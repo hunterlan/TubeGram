@@ -14,7 +14,8 @@ export default function Login() {
 
         const userCredentials = new UserCredentials(username, password);
 
-        const userToken = await fetchRequest<UserToken>('/api/auth', JSON.stringify(userCredentials), 'POST', 'application/json', undefined);
+        const userToken = await fetchRequest<UserToken>('/api/auth',
+            JSON.stringify(userCredentials), 'POST', 'application/json', undefined);
 
         if (userToken != undefined) {
             add(userToken.token, userToken.id);
