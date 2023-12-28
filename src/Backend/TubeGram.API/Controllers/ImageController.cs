@@ -64,6 +64,13 @@ namespace TubeGram.API.Controllers
             return File(b, "image/" + ext);
         }
 
+        [HttpGet]
+        public Task<IActionResult> GetImages([FromQuery] int count)
+        {
+            var photos = context.Images.OrderBy(i => i.CreationDate).Take(count);
+            return Task.FromResult<IActionResult>(Ok(photos));
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteImage(long id)
         {

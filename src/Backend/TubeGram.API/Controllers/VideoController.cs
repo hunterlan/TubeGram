@@ -10,13 +10,6 @@ namespace TubeGram.API.Controllers
     [ApiController]
     public class VideoController(ApplicationContext context, IConfiguration config) : ControllerBase
     {
-        /*// GET: api/<VideoController>
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }*/
-        
         private readonly string[] _permittedExtensions = { ".mp4", ".webm" };
 
         // GET api/<VideoController>/5
@@ -35,6 +28,13 @@ namespace TubeGram.API.Controllers
             
             var b = await System.IO.File.ReadAllBytesAsync(path);   // You can use your own method over here.         
             return File(b, "video/" + ext);
+        }
+
+        [HttpGet]
+        public Task<IActionResult> GetVideos([FromQuery] int count)
+        {
+            var videos = context.Videos.OrderBy(i => i.CreationDate).Take(count);
+            return Task.FromResult<IActionResult>(Ok(videos));
         }
 
         // POST api/<VideoController>
