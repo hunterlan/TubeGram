@@ -1,17 +1,27 @@
-import {startTransition} from "react";
-import {login} from "@/app/actions/auth.action";
+'use client'
+import {useUserStore} from "@/app/store/zustand";
+import {redirect} from "next/navigation";
+import {UserToken} from "@/app/models/users/user-token";
+import {UserCredentials} from "@/app/models/users/user-credentials";
+import {fetchRequest} from "@/app/utils/fetcher";
 
 
-export default async function Login() {
+export default function Login() {
+    const { add } = useUserStore();
     async function onSubmit(formData: FormData) {
-        'use server'
         const username = formData.get('username') as string;
         const password = formData.get('password') as string;
 
-        startTransition(() => {
-            login(username, password);
-            //TODO: show error if wrong credentials.
-        })
+        const userCredentials = new UserCredentials(username, password);
+
+        const userToken = await fetchRequest<UserToken>('/api/auth', JSON.stringify(userCredentials), 'POST', 'application/json', undefined);
+
+        if (userToken != undefined) {
+            add(userToken.token, userToken.id);
+            redirect('/feed');
+        } else {
+            //TODO: use snackbar
+        }
     }
 
     return <section className="bg-gray-50 dark:bg-gray-900">
@@ -52,7 +62,7 @@ export default async function Login() {
                                 <a href="#" className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500">Forgot password?</a>
                             </div>
                             <button type="submit"
-                                    className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Sign
+                                    className="w-full dark:text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Sign
                                 in
                             </button>
                             <p className="text-sm font-light text-gray-500 dark:text-gray-400">
