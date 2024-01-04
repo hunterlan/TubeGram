@@ -1,27 +1,26 @@
-'use client'
-import {useUserStore} from "@/app/store/zustand";
 import {redirect} from "next/navigation";
 import {UserToken} from "@/app/models/users/user-token";
 import {UserCredentials} from "@/app/models/users/user-credentials";
-import {fetchRequest} from "@/app/utils/fetcher";
+import {cookies} from "next/headers";
 
 
 export default function Login() {
-    const { add } = useUserStore();
     async function onSubmit(formData: FormData) {
+        'use server'
         const username = formData.get('username') as string;
         const password = formData.get('password') as string;
 
-        const userCredentials = new UserCredentials(username, password);
+        const userToken = await auth(username, password);
 
-        const userToken = await fetchRequest<UserToken>('/api/auth',
-            JSON.stringify(userCredentials), 'POST', 'application/json', undefined);
-
-        if (userToken != undefined) {
-            add(userToken.token, userToken.id);
+        if (typeof userToken !== 'number') {
+            cookies().set({
+                name: 'token',
+                value: JSON.stringify(userToken),
+                httpOnly: true,
+            });
             redirect('/feed');
         } else {
-            //TODO: use snackbar
+            //TODO: use snackbar or modal window
         }
     }
 
@@ -75,5 +74,21 @@ export default function Login() {
                 </div>
             </div>
         </section>
+}
 
+export async function auth(username: string, password: string): Promise<UserToken|number> {
+    const jsonBody = JSON.stringify(new UserCredentials(username, password));
+    const response = await fetch(process.env.API_URL + '/User', {
+        method: 'POST',
+        body: jsonBody,
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (response.ok) {
+        return await response.json() as UserToken;
+    } else {
+        return response.status;
+    }
 }
