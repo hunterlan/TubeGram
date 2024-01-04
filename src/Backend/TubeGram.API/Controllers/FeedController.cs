@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TubeGram.API.Helpers;
 using TubeGram.API.Models;
@@ -6,6 +7,7 @@ namespace TubeGram.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class FeedController(ApplicationContext context) : ControllerBase
     {
         
