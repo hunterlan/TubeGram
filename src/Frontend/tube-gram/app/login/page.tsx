@@ -17,6 +17,7 @@ export default function Login() {
                 name: 'token',
                 value: JSON.stringify(userToken),
                 httpOnly: true,
+                expires: 3600
             });
             redirect('/feed');
         } else {
@@ -83,7 +84,8 @@ export async function auth(username: string, password: string): Promise<UserToke
         body: jsonBody,
         headers: {
             'Content-Type': 'application/json'
-        }
+        },
+        cache: 'no-store'
     });
 
     if (response.ok) {

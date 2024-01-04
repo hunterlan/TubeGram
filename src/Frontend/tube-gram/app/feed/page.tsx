@@ -21,6 +21,7 @@ export default async function Feed() {
         })
     } else {
         if (posts === 401) {
+            redirect('/logout');
         }
         return <div>During fetching posts something went wrong.</div>
     }
@@ -32,7 +33,8 @@ export async function getPosts(token: string): Promise<ContentFeed[]|number> {
         headers: {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + token
-        }
+        },
+        cache: 'no-store'
     });
 
     if (response.ok) {
@@ -52,7 +54,7 @@ export async function mapToContentFeedVm(posts: ContentFeed[], token: string): P
                 feed.push(new ContentFeedVm(post.id, post.type, post.username, post.description, post.timestamp, blobData));
             } else {
                 if (blobData === 401) {
-
+                    redirect('/logout');
                 }
                 feed.push(new ContentFeedVm(post.id, post.type, post.username, post.description, post.timestamp, new Blob()));
             }
@@ -69,11 +71,11 @@ export async function getImage(id: number, token: string): Promise<Blob|number> 
         method: 'GET',
         headers: {
             "Authorization": "Bearer " + token
-        }
+        },
     })
 
     if (response.ok) {
-        return await response.json();
+        return await response.blob();
     } else {
         return response.status;
     }
